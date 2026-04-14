@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProductCopy AI — Free SEO Product Descriptions for E-commerce</title>
+  <meta name="description"
+    content="Generate SEO-optimised product descriptions for your e-commerce store in seconds. Free tool powered by Claude AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              purple: '#6B4EFF',
+              light: '#F5F0FF',
+              dark: '#4A32CC',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Spinner */
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+
+    /* Fade-in results */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.45s ease both;
+    }
+
+    .fade-in-up:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .fade-in-up:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    /* Multi-select styling */
+    .platform-checkbox:checked+label {
+      background-color: #F5F0FF;
+      border-color: #6B4EFF;
+      color: #6B4EFF;
+    }
+
+    /* Card top border variants */
+    .card-seo {
+      border-top: 3px solid #6B4EFF;
+    }
+
+    .card-conv {
+      border-top: 3px solid #10B981;
+    }
+
+    .card-plat {
+      border-top: 3px solid #F59E0B;
+    }
+
+    /* Textarea resize */
+    textarea {
+      resize: vertical;
+    }
+
+    /* Modal overlay */
+    #apiModal {
+      backdrop-filter: blur(4px);
+    }
+
+    /* Smooth transitions */
+    .btn-primary {
+      transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #5A3DE6;
+      box-shadow: 0 4px 14px rgba(107, 78, 255, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Input focus ring */
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6B4EFF;
+      box-shadow: 0 0 0 3px rgba(107, 78, 255, 0.15);
+    }
+
+    /* Copy button transition */
+    .copy-btn {
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn.copied {
+      background-color: #10B981;
+      color: white;
+      border-color: #10B981;
+    }
+  </style>
+</head>
+
+<body class="bg-white text-gray-900 min-h-screen">
+
+  <!-- ============================
+       API KEY MODAL
+  ============================= -->
+  <div id="apiModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+      <div class="flex items-center gap-3 mb-2">
+        <!-- Lock icon -->
+        <div class="w-10 h-10 rounded-full bg-brand-light flex items-center justify-center flex-shrink-0">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#6B4EFF" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900">Enter your Anthropic API Key</h2>
+      </div>
+      <p class="text-sm text-gray-500 mb-6 ml-13 pl-0">To generate product descriptions, you'll need a free Anthropic
+        API key.</p>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="apiKeyInput">API Key</label>
+        <input id="apiKeyInput" type="password" placeholder="sk-ant-api..."
+          class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition" />
+        <p id="apiKeyError" class="text-red-500 text-xs mt-1.5 hidden">Please enter a valid API key.</p>
+      </div>
+      <button id="saveApiKey"
+        class="btn-primary w-full bg-brand-purple text-white font-semibold py-3 rounded-lg text-sm">
+        Save &amp; Continue
+      </button>
+      <p class="text-xs text-gray-400 mt-4 text-center leading-relaxed">
+        Your key is stored locally in your browser and never sent to any server other than Anthropic's API.
+        <a href="https://console.anthropic.com/keys" target="_blank" rel="noopener"
+          class="text-brand-purple hover:underline ml-1">Get a key →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================
+       HEADER
+  ============================= -->
+  <header class="border-b border-gray-100 bg-white sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo mark -->
+        <div class="w-8 h-8 rounded-lg bg-brand-purple flex items-center justify-center">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div>
+          <span class="font-bold text-gray-900 text-base leading-none">ProductCopy AI</span>
+          <p class="text-xs text-gray-400 leading-none mt-0.5 hidden sm:block">Free SEO product descriptions for
+            e-commerce sellers</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span
+          class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 border border-gray-200 rounded-full px-3 py-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4l3 3" />
+          </svg>
+          Powered by Claude AI
+        </span>
+        <button id="resetKeyBtn" class="text-xs text-gray-400 hover:text-brand-purple transition">Reset API Key</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================
+       HERO
+  ============================= -->
+  <section class="bg-gradient-to-b from-brand-light to-white py-12 sm:py-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <div
+        class="inline-flex items-center gap-2 bg-white border border-brand-purple/20 text-brand-purple text-xs font-medium rounded-full px-4 py-1.5 mb-6">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        100% Free — No Account Needed
+      </div>
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-4">
+        Product descriptions that<br class="hidden sm:block" />
+        <span class="text-brand-purple">rank and convert</span>
+      </h1>
+      <p class="text-base sm:text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+        Generate three SEO-optimised product description variations for your e-commerce store in seconds. Built for
+        Shopify, Amazon, Etsy, and beyond.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================
+       MAIN CONTENT
+  ============================= -->
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 pb-20">
+
+    <!-- ============================
+         STEP 1: INPUT FORM
+    ============================= -->
+    <section id="formSection">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 -mt-6 relative z-10">
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">Tell us about your product</h2>
+
+        <form id="productForm" novalidate>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+            <!-- Product Name -->
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="productName">
+                Product Name <span class="text-red-400">*</span>
+              </label>
+              <input id="productName" type="text" placeholder="e.g. Organic Cotton Tote Bag"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition"
+                required />
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="productCategory">
+                Product Category <span class="text-red-400">*</span>
+              </label>
+              <select id="productCategory"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 bg-white transition appearance-none"
+                style="background-image: url(\" data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12'
+                height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' %3E%3Cpath
+                d='M6 9l6 6 6-6' /%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 14px
+                center;" required>
+                <option value="" disabled selected>Select a category</option>
+                <option>Apparel</option>
+                <option>Jewellery</option>
+                <option>Home &amp; Living</option>
+                <option>Electronics</option>
+                <option>Beauty &amp; Skincare</option>
+                <option>Food &amp; Beverage</option>
+                <option>Sports &amp; Outdoors</option>
+                <option>Art &amp; Crafts</option>
+                <option>Pet Supplies</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <!-- Tone of Voice -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="toneOfVoice">
+                Tone of Voice <span class="text-red-400">*</span>
+              </label>
+              <select id="toneOfVoice"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 bg-white transition appearance-none"
+                style="background-image: url(\" data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12'
+                height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' %3E%3Cpath
+                d='M6 9l6 6 6-6' /%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 14px
+                center;" required>
+                <option value="" disabled selected>Select a tone</option>
+                <option>Professional</option>
+                <option>Conversational</option>
+                <option>Luxury</option>
+                <option>Playful</option>
+                <option>Minimalist</option>
+              </select>
+            </div>
+
+            <!-- Selling Platforms -->
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                Selling Platform(s) <span class="text-red-400">*</span>
+              </label>
+              <div class="flex flex-wrap gap-2" id="platformGroup">
+                <!-- Platform checkboxes rendered by JS for cleanliness -->
+              </div>
+              <p class="text-xs text-gray-400 mt-2">Select all that apply</p>
+            </div>
+
+            <!-- Key Features -->
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="keyFeatures">
+                Key Product Features <span class="text-red-400">*</span>
+              </label>
+              <textarea id="keyFeatures" rows="4"
+                placeholder="e.g.&#10;• Made from 100% GOTS-certified organic cotton&#10;• Extra-large 15L capacity&#10;• Reinforced handles&#10;• Available in 6 colours"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition"
+                required></textarea>
+              <p class="text-xs text-gray-400 mt-1.5">List bullet points or describe in a few sentences.</p>
+            </div>
+
+            <!-- Target Audience -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="targetAudience">
+                Target Audience <span class="text-red-400">*</span>
+              </label>
+              <input id="targetAudience" type="text" placeholder="e.g. women aged 25–40 into sustainable fashion"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition"
+                required />
+            </div>
+
+            <!-- Primary Keyword -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5" for="primaryKeyword">
+                Primary Keyword
+                <span class="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input id="primaryKeyword" type="text" placeholder="e.g. organic cotton tote bag"
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition" />
+              <p class="text-xs text-gray-400 mt-1.5">Main keyword you want to rank for.</p>
+            </div>
+
+          </div>
+
+          <!-- Error message area -->
+          <div id="formError"
+            class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600"></div>
+
+          <!-- Submit -->
+          <div class="mt-7 flex justify-end">
+            <button id="generateBtn" type="submit"
+              class="btn-primary bg-brand-purple text-white font-semibold px-8 py-3 rounded-xl text-sm flex items-center gap-2.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              Generate Descriptions
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============================
+         STEP 2: LOADING STATE
+    ============================= -->
+    <section id="loadingSection" class="hidden mt-10 text-center py-16">
+      <div class="inline-flex flex-col items-center gap-5">
+        <!-- Animated ring -->
+        <div class="relative w-16 h-16">
+          <svg class="w-16 h-16" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="28" stroke="#F5F0FF" stroke-width="4" />
+            <circle cx="32" cy="32" r="28" stroke="#6B4EFF" stroke-width="4" stroke-dasharray="44 132"
+              stroke-linecap="round" style="animation: spin 1.2s linear infinite; transform-origin: center;" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4EFF" stroke-width="2.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <p id="loadingMessage" class="text-base font-medium text-gray-700 transition-all duration-300">Analysing your
+            product...</p>
+          <p class="text-sm text-gray-400 mt-1">This usually takes 10–20 seconds</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================
+         STEP 3: RESULTS
+    ============================= -->
+    <section id="resultsSection" class="hidden mt-10">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-900">Your Product Descriptions</h2>
+        <button id="regenerateBtn"
+          class="text-sm text-brand-purple font-medium hover:underline flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 4v6h6" />
+            <path d="M23 20v-6h-6" />
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+          </svg>
+          Generate New
+        </button>
+      </div>
+
+      <!-- Results grid -->
+      <div id="resultsGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-5"></div>
+
+      <!-- ============================
+           STEP 4: PHOTOROOM CTA
+      ============================= -->
+      <div class="mt-10 rounded-2xl overflow-hidden"
+        style="background: linear-gradient(135deg, #6B4EFF 0%, #4A32CC 100%);">
+        <div class="px-6 sm:px-10 py-10 sm:py-12 flex flex-col sm:flex-row items-center gap-8">
+          <!-- Text side -->
+          <div class="flex-1 text-center sm:text-left">
+            <p class="text-white/70 text-sm font-medium uppercase tracking-wide mb-2">Next Step</p>
+            <h3 class="text-2xl sm:text-3xl font-bold text-white leading-snug mb-3">
+              Your words are ready.<br />Now make your visuals match.
+            </h3>
+            <p class="text-white/80 text-base leading-relaxed mb-6" id="ctaSubtext">
+              Photoroom helps e-commerce sellers create studio-quality product photos in minutes — no photographer
+              needed.
+            </p>
+            <a href="https://www.photoroom.com" target="_blank" rel="noopener"
+              class="inline-flex items-center gap-2 bg-white text-brand-purple font-semibold px-7 py-3.5 rounded-xl text-sm transition hover:bg-gray-50 hover:shadow-lg">
+              Try Photoroom Free
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+          <!-- Visual side -->
+          <div class="flex-shrink-0">
+            <div class="w-44 h-44 relative">
+              <!-- CSS illustration: product photo mockup -->
+              <div
+                class="w-44 h-44 bg-white/10 rounded-2xl border border-white/20 flex flex-col items-center justify-center gap-3 p-4">
+                <!-- Stylised product image frame -->
+                <div class="w-24 h-24 bg-white/20 rounded-xl flex items-center justify-center">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"
+                    opacity="0.9">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <div class="w-16 h-1.5 bg-white/40 rounded-full mx-auto mb-1.5"></div>
+                  <div class="w-12 h-1.5 bg-white/25 rounded-full mx-auto"></div>
+                </div>
+                <!-- Magic wand -->
+                <div
+                  class="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B4EFF" stroke-width="2">
+                    <path
+                      d="M15 4V2m0 14v-2M8 9H2m14 0h-2M4.93 4.93l-1.42-1.42m12.02 12.02l-1.42-1.42M4.93 16.07l-1.42 1.42m12.02-12.02l-1.42 1.42" />
+                    <path d="M12 9l-4 9 4-4 4 4-4-9z" fill="#6B4EFF" stroke="none" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate new button (bottom) -->
+      <div class="mt-8 text-center">
+        <button id="newDescriptionBtn"
+          class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-brand-purple transition border border-gray-200 hover:border-brand-purple/40 rounded-xl px-6 py-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 4v6h6" />
+            <path d="M23 20v-6h-6" />
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+          </svg>
+          Generate New Descriptions
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================
+       FOOTER
+  ============================= -->
+  <footer class="border-t border-gray-100 py-6">
+    <div
+      class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
+      <span>Built for e-commerce sellers &nbsp;|&nbsp; Powered by <a href="https://www.photoroom.com" target="_blank"
+          rel="noopener" class="hover:text-brand-purple transition">Photoroom</a></span>
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:text-gray-600 transition">Privacy Policy</a>
+        <a href="#" class="hover:text-gray-600 transition">Terms</a>
+        <button id="footerResetKey" class="hover:text-brand-purple transition">Reset API Key</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================
+       JAVASCRIPT
+  ============================= -->
+  <script>
+    // =========================================================
+    // CONFIG
+    // =========================================================
+    const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+    const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+    const LS_KEY = 'productcopy_anthropic_key';
+
+    const PLATFORMS = ['Shopify', 'WooCommerce', 'Amazon', 'eBay', 'Etsy', 'Instagram Shop', 'Other'];
+
+    const LOADING_MESSAGES = [
+      'Analysing your product...',
+      'Researching SEO keywords...',
+      'Crafting your descriptions...',
+      'Optimising for conversion...',
+    ];
+
+    const VARIATION_META = {
+      seo_optimised: {
+        label: 'SEO Optimised',
+        badge: 'Ranks on Google',
+        badgeColor: 'bg-purple-100 text-purple-700',
+        cardClass: 'card-seo',
+        borderColor: '#6B4EFF',
+        desc: '150–200 words · Keyword-rich · Structured for search',
+      },
+      conversion_focused: {
+        label: 'Conversion Focused',
+        badge: 'Drives sales',
+        badgeColor: 'bg-emerald-100 text-emerald-700',
+        cardClass: 'card-conv',
+        borderColor: '#10B981',
+        desc: '100–150 words · Benefit-led · Strong CTA',
+      },
+      platform_optimised: {
+        label: 'Platform Optimised',
+        badge: 'Built for your store',
+        badgeColor: 'bg-amber-100 text-amber-700',
+        cardClass: 'card-plat',
+        borderColor: '#F59E0B',
+        desc: 'Tailored to your platform(s) · Best practices',
+      },
+    };
+
+    // =========================================================
+    // STATE
+    // =========================================================
+    let apiKey = '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';
+    let loadingInterval = null;
+    let loadingMsgIndex = 0;
+
+    // =========================================================
+    // DOM REFERENCES
+    // =========================================================
+    const apiModal = document.getElementById('apiModal');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveApiKeyBtn = document.getElementById('saveApiKey');
+    const apiKeyError = document.getElementById('apiKeyError');
+    const resetKeyBtn = document.getElementById('resetKeyBtn');
+    const footerReset = document.getElementById('footerResetKey');
+
+    const productForm = document.getElementById('productForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const formError = document.getElementById('formError');
+
+    const formSection = document.getElementById('formSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const resultsGrid = document.getElementById('resultsGrid');
+
+    const regenerateBtn = document.getElementById('regenerateBtn');
+    const newDescriptionBtn = document.getElementById('newDescriptionBtn');
+    const ctaSubtext = document.getElementById('ctaSubtext');
+
+    // =========================================================
+    // INIT
+    // =========================================================
+    function init() {
+      renderPlatforms();
+      apiModal.classList.add('hidden'); // Key is hardcoded for demo
+    }
+
+    function renderPlatforms() {
+      const group = document.getElementById('platformGroup');
+      PLATFORMS.forEach(platform => {
+        const id = 'plat_' + platform.replace(/\s+/g, '_').toLowerCase();
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+          <input type="checkbox" id="${id}" class="platform-checkbox sr-only" value="${platform}" />
+          <label for="${id}"
+            class="cursor-pointer select-none border border-gray-200 rounded-lg px-3.5 py-2 text-sm text-gray-600 font-medium transition hover:border-brand-purple/40 hover:bg-brand-light"
+            style="display:inline-block;"
+          >${platform}</label>
+        `;
+        group.appendChild(wrapper);
+      });
+    }
+
+    // =========================================================
+    // API KEY MANAGEMENT
+    // =========================================================
+    saveApiKeyBtn.addEventListener('click', () => {
+      const val = apiKeyInput.value.trim();
+      if (!val || !val.startsWith('sk-ant-')) {
+        apiKeyError.textContent = 'Please enter a valid Anthropic API key (starts with sk-ant-).';
+        apiKeyError.classList.remove('hidden');
+        return;
+      }
+      apiKey = val;
+      localStorage.setItem(LS_KEY, apiKey);
+      apiModal.classList.add('hidden');
+      apiKeyError.classList.add('hidden');
+    });
+
+    apiKeyInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveApiKeyBtn.click();
+    });
+
+    function showApiModal() {
+      apiKeyInput.value = '';
+      apiKeyError.classList.add('hidden');
+      apiModal.classList.remove('hidden');
+    }
+
+    [resetKeyBtn, footerReset].forEach(btn => {
+      btn.addEventListener('click', () => {
+        localStorage.removeItem(LS_KEY);
+        apiKey = '';
+        showApiModal();
+      });
+    });
+
+    // =========================================================
+    // FORM HELPERS
+    // =========================================================
+    function getFormValues() {
+      const platforms = [...document.querySelectorAll('.platform-checkbox:checked')].map(c => c.value);
+      return {
+        productName: document.getElementById('productName').value.trim(),
+        category: document.getElementById('productCategory').value,
+        platforms,
+        features: document.getElementById('keyFeatures').value.trim(),
+        audience: document.getElementById('targetAudience').value.trim(),
+        tone: document.getElementById('toneOfVoice').value,
+        keyword: document.getElementById('primaryKeyword').value.trim(),
+      };
+    }
+
+    function validateForm(vals) {
+      if (!vals.productName) return 'Please enter your product name.';
+      if (!vals.category) return 'Please select a product category.';
+      if (vals.platforms.length === 0) return 'Please select at least one selling platform.';
+      if (!vals.features) return 'Please describe your key product features.';
+      if (!vals.audience) return 'Please describe your target audience.';
+      if (!vals.tone) return 'Please select a tone of voice.';
+      return null;
+    }
+
+    function showFormError(msg) {
+      formError.textContent = msg;
+      formError.classList.remove('hidden');
+    }
+
+    function clearFormError() {
+      formError.classList.add('hidden');
+    }
+
+    // =========================================================
+    // LOADING STATE
+    // =========================================================
+    function startLoading() {
+      formSection.classList.add('hidden');
+      loadingSection.classList.remove('hidden');
+      resultsSection.classList.add('hidden');
+      loadingMsgIndex = 0;
+      loadingMessage.textContent = LOADING_MESSAGES[0];
+      loadingInterval = setInterval(() => {
+        loadingMsgIndex = (loadingMsgIndex + 1) % LOADING_MESSAGES.length;
+        loadingMessage.style.opacity = '0';
+        setTimeout(() => {
+          loadingMessage.textContent = LOADING_MESSAGES[loadingMsgIndex];
+          loadingMessage.style.opacity = '1';
+        }, 200);
+      }, 1500);
+    }
+
+    function stopLoading() {
+      clearInterval(loadingInterval);
+      loadingSection.classList.add('hidden');
+    }
+
+    // =========================================================
+    // CLAUDE API CALL
+    // =========================================================
+    async function generateDescriptions(vals) {
+      const systemPrompt = `You are an expert e-commerce copywriter and SEO specialist with deep knowledge of selling on ${vals.platforms.join(', ')}. You write product descriptions that rank on Google and convert browsers into buyers. You understand the specific requirements, character limits, and best practices of each major e-commerce platform. Always write in active voice, lead with benefits not features, and naturally incorporate keywords without stuffing.`;
+
+      const keywordLine = vals.keyword ? `Primary keyword: ${vals.keyword}` : '';
+
+      const userPrompt = `Generate three product description variations for the following:
+
+Product: ${vals.productName}
+Category: ${vals.category}
+Selling platforms: ${vals.platforms.join(', ')}
+Key features: ${vals.features}
+Target audience: ${vals.audience}
+Tone: ${vals.tone}
+${keywordLine}
+
+Return ONLY a valid JSON object in this exact structure, no preamble, no markdown, no code fences:
+{
+  "seo_optimised": {
+    "description": "full description text",
+    "meta_description": "max 155 char meta description",
+    "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    "word_count": 0
+  },
+  "conversion_focused": {
+    "description": "full description text",
+    "meta_description": "max 155 char meta description",
+    "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    "word_count": 0
+  },
+  "platform_optimised": {
+    "description": "full description text",
+    "meta_description": "max 155 char meta description",
+    "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    "word_count": 0,
+    "platform_notes": "brief note on why this version suits the platform"
+  }
+}`;
+
+      const response = await fetch(CLAUDE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens: 2000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userPrompt }],
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+
+      if (response.status === 401) throw new Error('INVALID_KEY');
+      if (response.status === 429) throw new Error('RATE_LIMIT');
+      if (!response.ok) throw new Error('API_ERROR');
+
+      const data = await response.json();
+      const rawText = data.content?.[0]?.text || '';
+
+      // Strip any accidental markdown code fences
+      const cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      // Recompute actual word counts from generated text
+      ['seo_optimised', 'conversion_focused', 'platform_optimised'].forEach(key => {
+        if (parsed[key]?.description) {
+          parsed[key].word_count = parsed[key].description.trim().split(/\s+/).length;
+        }
+      });
+
+      return parsed;
+    }
+
+    // =========================================================
+    // RESULTS RENDERING
+    // =========================================================
+    function renderResults(results, vals) {
+      resultsGrid.innerHTML = '';
+
+      const order = ['seo_optimised', 'conversion_focused', 'platform_optimised'];
+
+      order.forEach((key, i) => {
+        const data = results[key];
+        const meta = VARIATION_META[key];
+        if (!data) return;
+
+        const card = document.createElement('div');
+        card.className = `fade-in-up bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col ${meta.cardClass}`;
+
+        const keywords = (data.keywords || []).map(kw =>
+          `<span class="inline-block bg-gray-100 text-gray-600 text-xs rounded-full px-2.5 py-1 font-medium">${escapeHtml(kw)}</span>`
+        ).join('');
+
+        const platformNotes = key === 'platform_optimised' && data.platform_notes
+          ? `<div class="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-700 leading-relaxed">
+              <strong class="font-semibold">Platform tip:</strong> ${escapeHtml(data.platform_notes)}
+            </div>`
+          : '';
+
+        card.innerHTML = `
+          <div class="p-5 flex-1 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-gray-900 text-sm">${meta.label}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">${meta.desc}</p>
+              </div>
+              <span class="flex-shrink-0 text-xs font-medium rounded-full px-2.5 py-1 ${meta.badgeColor}">${meta.badge}</span>
+            </div>
+
+            <!-- Description -->
+            <div class="flex-1">
+              <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">${escapeHtml(data.description)}</p>
+              ${platformNotes}
+            </div>
+
+            <!-- Meta description -->
+            <div class="bg-gray-50 rounded-lg px-3 py-2.5">
+              <p class="text-xs text-gray-400 font-medium mb-1">Meta Description</p>
+              <p class="text-xs text-gray-600 leading-relaxed">${escapeHtml(data.meta_description || '')}</p>
+            </div>
+
+            <!-- Keywords -->
+            <div>
+              <p class="text-xs text-gray-400 font-medium mb-2">Suggested Keywords</p>
+              <div class="flex flex-wrap gap-1.5">${keywords}</div>
+            </div>
+
+          </div>
+
+          <!-- Footer: word count + copy button -->
+          <div class="border-t border-gray-100 px-5 py-3 flex items-center justify-between bg-gray-50/50">
+            <span class="text-xs text-gray-400">${data.word_count || 0} words</span>
+            <button
+              class="copy-btn border border-gray-200 rounded-lg px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:border-gray-300 transition flex items-center gap-1.5"
+              data-text="${escapeAttr(data.description)}"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy
+            </button>
+          </div>
+        `;
+
+        resultsGrid.appendChild(card);
+      });
+
+      // Wire up copy buttons
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const text = this.getAttribute('data-text');
+          copyToClipboard(text, this);
+        });
+      });
+
+      // Update CTA subtext with category
+      ctaSubtext.textContent = `Photoroom helps ${vals.category || 'e-commerce'} sellers create studio-quality product photos in minutes — no photographer needed.`;
+
+      stopLoading();
+      resultsSection.classList.remove('hidden');
+      window.scrollTo({ top: resultsSection.offsetTop - 80, behavior: 'smooth' });
+    }
+
+    // =========================================================
+    // CLIPBOARD
+    // =========================================================
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          Copied!
+        `;
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const orig = btn.innerHTML;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // =========================================================
+    // RESET FLOW
+    // =========================================================
+    function resetToForm() {
+      resultsSection.classList.add('hidden');
+      loadingSection.classList.add('hidden');
+      formSection.classList.remove('hidden');
+      clearFormError();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    [regenerateBtn, newDescriptionBtn].forEach(btn => btn.addEventListener('click', resetToForm));
+
+    // =========================================================
+    // FORM SUBMIT
+    // =========================================================
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFormError();
+
+      if (!apiKey) {
+        showApiModal();
+        return;
+      }
+
+      const vals = getFormValues();
+      const validationError = validateForm(vals);
+      if (validationError) {
+        showFormError(validationError);
+        return;
+      }
+
+      startLoading();
+
+      try {
+        const results = await generateDescriptions(vals);
+        renderResults(results, vals);
+      } catch (err) {
+        stopLoading();
+        formSection.classList.remove('hidden');
+
+        if (err.message === 'INVALID_KEY') {
+          showFormError('API key invalid. Please check and reset your key below.');
+        } else if (err.message === 'RATE_LIMIT') {
+          showFormError('Too many requests. Please wait a moment and try again.');
+        } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+          showFormError('Taking longer than usual... please try again.');
+        } else if (err instanceof SyntaxError) {
+          showFormError('Received an unexpected response. Please try again.');
+        } else {
+          showFormError('Something went wrong. Please try again.');
+        }
+
+        console.error('[ProductCopy AI] Error:', err);
+      }
+    });
+
+    // =========================================================
+    // UTILITIES
+    // =========================================================
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    // =========================================================
+    // BOOT
+    // =========================================================
+    init();
+  </script>
+</body>
+
+</html>
